@@ -1,0 +1,167 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Ejemplo Leaflet 3</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+	<link rel="stylesheet" href="plugin/leaflet.css"/>
+	<link rel="stylesheet" href="css/ejemplo3.css"/>
+	<script src="plugin/leaflet.js"></script>
+	<script src="plugin/jquery-3.2.1.min.js"></script>
+</head>
+<body>
+
+<div id="map"></div>
+
+
+
+<script type='text/javascript'>
+
+/*Clasificación colores Mapa*/
+function retornarClasificacion(d) {
+    return d == '9 - 11' ? '#800026' :
+           d == '12 - 15'  ? '#BD0026' :
+           d == '5 - 8'  ? '#E31A1C' :
+           d == '1 - 2'  ? '#FC4E2A' :
+                           '#FFEDA0';
+}
+
+/*Estilo Capa*/
+function estiloCapa(feature) {
+    return {
+        fillColor: retornarClasificacion(feature.properties.TIPO),
+        weight: 2,
+        opacity: 1,
+        color: 'white',
+        dashArray: '3',
+        fillOpacity: 0.7
+    };
+}
+
+
+
+
+
+
+
+/*Inicialización Mapa*/
+var mapboxAccessToken = 'pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw';
+var map = L.map('map').setView([12, -71.7], 10);
+
+L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=' + mapboxAccessToken, {
+    attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
+		'<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
+		'Imagery © <a href="http://mapbox.com">Mapbox</a>',
+	id: 'mapbox.light'
+}).addTo(map);
+
+
+/*Cuadro de Información*/
+
+
+var informacion = L.control();
+
+informacion.onAdd = function (map) {
+    this._div = L.DomUtil.create('div', 'info'); // create a div with a class "info"
+    this.update();
+    return this._div;
+};
+
+// method that we will use to update the control based on feature properties passed
+informacion.update = function (props) {
+    this._div.innerHTML = '<h4>Grado de Amenaza de Remoción en Masa</h4>' +  (props ?
+        '<b>' + props.TIPO + '</b><br/> Simbolo ' + props.SIMBOLO_UR + '<br> Proceso : '+ props.PROCES_GEN
+        : 'Sin Información');
+};
+
+informacion.addTo(map);
+
+
+
+/*Funciones Estilos Mapa Resaltado*/
+
+function highlightFeature(e) {
+var layer = e.target;
+
+layer.setStyle({
+	weight: 5,
+	color: '#666',
+	dashArray: '',
+	fillOpacity: 0.7
+});
+
+if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
+	layer.bringToFront();
+}
+
+informacion.update(layer.feature.properties);
+}
+
+var geojson;
+
+function resetHighlight(e) {
+geojson.resetStyle(e.target);
+informacion.update();
+}
+
+function zoomToFeature(e) {
+map.fitBounds(e.target.getBounds());
+}
+
+function onEachFeature(feature, layer) {
+layer.on({
+	mouseover: highlightFeature,
+	mouseout: resetHighlight,
+	click: zoomToFeature
+});
+}
+
+/*Capa de Información Geoserver*/
+var capa = null;
+
+$.ajax({
+	type: "GET",
+    url: "/desarrollo_visores/leaflet/proxy.php?capa=amenazas_remocion_masas",
+    datatype: 'application/json',
+	success: function(data){
+
+			capa=JSON.parse(data);
+			geojson = L.geoJSON(capa,{
+							style: estiloCapa,
+							onEachFeature: onEachFeature
+						}).addTo(map);
+				
+	}
+});
+
+
+
+/*Leyenda*/
+var leyenda = L.control({position: 'bottomright'});
+
+leyenda.onAdd = function (map) {
+
+    var div = L.DomUtil.create('div', 'info legend'),
+        grades = ['1 - 2','5 - 8','9 - 11','12 - 15'],        			
+        labels = ['1@2','5@8','9@11','12@15'];
+
+    // loop through our density intervals and generate a label with a colored square for each interval
+    for (var i = 0; i < grades.length; i++) {
+    	console.log(grades[i] + 1);
+        div.innerHTML +=
+            '<i style="background:' + retornarClasificacion(grades[i]) + '"></i> ' +
+            grades[i] + (grades[i] ? '&ndash;' + grades[i] + '<br>' : '+');
+    }
+
+    return div;
+};
+
+leyenda.addTo(map);
+
+/*Adición Escala al mapa*/
+ L.control.scale().addTo(map);
+
+
+</script>
+</body>
+</html>

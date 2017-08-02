@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Ejemplo Leaflet 4</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+	<link rel="stylesheet" href="plugin/leaflet.css"/>
+	<link rel="stylesheet" href="css/ejemplo4.css"/>
+	<script src="plugin/leaflet.js"></script>
+</head>
+<body>
+
+
+<div id="map">
+</div>
+
+<script type="text/javascript">
+
+
+/*Inicializar Mapa */
+
+var mapboxAccessToken = 'pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw';
+var map = L.map('map').setView([12, -71.7], 10);
+
+L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=' + mapboxAccessToken, {
+    attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, ' +
+		'<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
+		'Imagery © <a href="http://mapbox.com">Mapbox</a>',
+	id: 'mapbox.light'
+}).addTo(map);
+
+/*var map = L.map('map', {
+	center: [4.59, -74.13],
+	zoom: 7
+});
+/*Agregar Servicio WMS/
+var wmsLayer = L.tileLayer.wms('http://172.16.146.237:8080/geoserver/ows?', {
+	layers: 'topp:states,capasnacionales:amenaza_remocion_masas_na'
+}).addTo(map);
+
+
+
+
+/*Control de Layer Boton de Capas*/
+
+
+var basemaps = {
+    AmenzanaNacional: L.tileLayer.wms('http://172.16.146.237:8080/geoserver/ows?', {
+        layers: 'capasnacionales:amenaza_remocion_masas_na',
+        transparent: true,
+    format: 'image/png'
+    }),
+
+    'Amenazas Remocion Masa Alta Guajira': L.tileLayer.wms('http://172.16.146.237:8080/geoserver/ows?', {
+        layers: 'capas:amenaza',
+        transparent: true,
+    format: 'image/png'
+    }),
+};
+
+L.control.layers(basemaps,basemaps).addTo(map);
+basemaps.AmenzanaNacional.addTo(map);
+
+</script>
+
+</body>
+</html>
